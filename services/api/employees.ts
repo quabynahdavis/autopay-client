@@ -31,6 +31,13 @@ export function fetchBankingInfo(employeeId: string) {
   return apiFetch<BankingInfo>(`/employees/${employeeId}/banking`);
 }
 
+export function updateBankingInfo(employeeId: string, data: Partial<BankingInfo>) {
+  return apiFetch<BankingInfo>(`/employees/${employeeId}/banking`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
 export function fetchSalaryPayments(employeeId: string) {
   return apiFetch<SalaryPayment[]>(`/employees/${employeeId}/salary-payments`);
 }

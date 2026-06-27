@@ -5,6 +5,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "admin.dashboard",
     "admin.payments",
     "admin.upload",
+    "admin.approval",
     "admin.reports",
     "admin.settings",
     "admin.employees",
@@ -13,7 +14,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "admin.dashboard",
     "admin.payments",
     "admin.upload",
-    "admin.approval",
     "admin.reports",
   ],
   employee: [

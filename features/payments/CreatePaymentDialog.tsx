@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { CreditCard, Building2, Smartphone } from "lucide-react";
+import { CreditCard, Building2, Smartphone, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,60 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createPayment } from "@/services/api/payments";
-
-// ── Provider lists ────────────────────────────────────────────────────────────
-
-const BANK_PROVIDERS = [
-  "GCB Bank", "Ecobank Ghana", "Fidelity Bank", "Absa Bank",
-  "Standard Chartered", "Stanbic Bank", "CalBank", "Zenith Bank",
-  "UBA Ghana", "Republic Bank",
-];
-const MOMO_PROVIDERS = ["MTN MoMo", "Vodafone Cash", "AirtelTigo Money"];
-const CARD_PROVIDERS = ["Visa", "Mastercard", "GH-Link", "AmEx"];
-
-const TYPE_CONFIG = {
-  bank: {
-    label: "Bank Transfer",
-    icon: Building2,
-    accountLabel: "Account Number",
-    accountPlaceholder: "10–16 digit account number",
-    providers: BANK_PROVIDERS,
-  },
-  momo: {
-    label: "Mobile Money",
-    icon: Smartphone,
-    accountLabel: "MoMo Number",
-    accountPlaceholder: "0xxxxxxxxx",
-    providers: MOMO_PROVIDERS,
-  },
-  card: {
-    label: "Card",
-    icon: CreditCard,
-    accountLabel: "Card Number",
-    accountPlaceholder: "16-digit card number",
-    providers: CARD_PROVIDERS,
-  },
-} as const;
-
-type PayType = keyof typeof TYPE_CONFIG;
-
-interface Fields {
-  recipientName: string;
-  paymentType: PayType;
-  bankOrProvider: string;
-  accountNumber: string;
-  amount: string;
-  note: string;
-}
-
-const EMPTY: Fields = {
-  recipientName: "",
-  paymentType: "bank",
-  bankOrProvider: "",
-  accountNumber: "",
-  amount: "",
-  note: "",
-};
+import { fetchEmployees, fetchBankingInfo } from "@/services/api/employees";
+import type { ManagedEmployee, BankingInfo } from "@/types/employee";
 
 interface CreatePaymentDialogProps {
   open: boolean;
@@ -81,28 +29,80 @@ export function CreatePaymentDialog({
   onOpenChange,
   onSuccess,
 }: CreatePaymentDialogProps) {
-  const [fields, setFields] = useState<Fields>(EMPTY);
-  const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
-  const [submitting, setSubmitting] = useState(false);
+  const [employees, setEmployees] = useState<ManagedEmployee[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [banking, setBanking] = useState<BankingInfo | null>(null);
+  const [loadingBanking, setLoadingBanking] = useState(false);
 
-  const set = (key: keyof Fields, value: string) =>
-    setFields((f) => ({ ...f, [key]: value }));
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ employee?: string; amount?: string }>({});
+
+  // Fetch employees when the dialog opens
+  useEffect(() => {
+    if (open) {
+      setLoadingEmployees(true);
+      fetchEmployees()
+        .then((data) => {
+          setEmployees(data || []);
+        })
+        .catch((err) => {
+          console.error("Failed to load employees", err);
+          toast.error("Could not load employee directory");
+        })
+        .finally(() => {
+          setLoadingEmployees(false);
+        });
+    } else {
+      // Reset state
+      setSelectedEmployeeId("");
+      setBanking(null);
+      setAmount("");
+      setNote("");
+      setErrors({});
+    }
+  }, [open]);
+
+  // Fetch banking info when an employee is selected
+  useEffect(() => {
+    if (selectedEmployeeId) {
+      setLoadingBanking(true);
+      fetchBankingInfo(selectedEmployeeId)
+        .then((info) => {
+          setBanking(info);
+        })
+        .catch((err) => {
+          console.error("Failed to load banking details", err);
+          toast.error("Could not retrieve employee banking details");
+          setBanking(null);
+        })
+        .finally(() => {
+          setLoadingBanking(false);
+        });
+    } else {
+      setBanking(null);
+    }
+  }, [selectedEmployeeId]);
 
   const validate = (): boolean => {
-    const e: Partial<Record<keyof Fields, string>> = {};
-    if (!fields.recipientName.trim()) e.recipientName = "Name required";
-    if (!fields.bankOrProvider) e.bankOrProvider = "Select a provider";
-    if (!fields.accountNumber.trim()) {
-      e.accountNumber = "Required";
-    } else if (fields.paymentType === "bank" && !/^\d{10,16}$/.test(fields.accountNumber)) {
-      e.accountNumber = "Must be 10–16 digits";
-    } else if (fields.paymentType === "momo" && !/^0\d{9}$/.test(fields.accountNumber)) {
-      e.accountNumber = "Must start with 0 and be 10 digits";
-    } else if (fields.paymentType === "card" && !/^\d{16}$/.test(fields.accountNumber.replace(/\s|-/g, ""))) {
-      e.accountNumber = "Must be 16 digits";
+    const e: { employee?: string; amount?: string } = {};
+    if (!selectedEmployeeId) e.employee = "Please select an employee";
+    
+    if (selectedEmployeeId && !banking) {
+      e.employee = "Retrieving banking details...";
+    } else if (banking) {
+      if (banking.preferredMethod === "bank" && (!banking.bankAccountNumber || !banking.bankName)) {
+        e.employee = "Employee has not set up their bank details";
+      } else if (banking.preferredMethod === "momo" && (!banking.momoNumber || !banking.momoNetwork)) {
+        e.employee = "Employee has not set up their MoMo details";
+      }
     }
-    const amt = parseFloat(fields.amount);
-    if (!fields.amount || isNaN(amt) || amt <= 0) e.amount = "Enter a valid amount";
+
+    const amt = parseFloat(amount);
+    if (!amount || isNaN(amt) || amt <= 0) e.amount = "Enter a valid amount";
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -110,19 +110,27 @@ export function CreatePaymentDialog({
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validate()) return;
+    if (!banking) return;
+
     setSubmitting(true);
     try {
+      const selectedEmp = employees.find((emp) => emp.employeeId === selectedEmployeeId);
+      if (!selectedEmp) throw new Error("Selected employee not found");
+
+      const paymentType = banking.preferredMethod;
+      const bankOrProvider = paymentType === "bank" ? banking.bankName! : banking.momoNetwork!;
+      const accountNumber = paymentType === "bank" ? banking.bankAccountNumber! : banking.momoNumber!;
+
       await createPayment({
-        recipientName: fields.recipientName.trim(),
-        accountNumber: fields.accountNumber.replace(/\s|-/g, ""),
-        paymentType: fields.paymentType,
-        bankOrProvider: fields.bankOrProvider,
-        amount: parseFloat(fields.amount),
-        note: fields.note || undefined,
+        recipientName: selectedEmp.name,
+        accountNumber: accountNumber.replace(/\s|-/g, ""),
+        paymentType,
+        bankOrProvider,
+        amount: parseFloat(amount),
+        note: note || undefined,
       });
-      toast.success(`Payment to ${fields.recipientName.trim()} submitted — processing now`);
-      setFields(EMPTY);
-      setErrors({});
+
+      toast.success(`Payment to ${selectedEmp.name} submitted successfully`);
       onOpenChange(false);
       onSuccess();
     } catch (err) {
@@ -132,122 +140,118 @@ export function CreatePaymentDialog({
     }
   };
 
-  const handleTypeChange = (type: PayType) => {
-    setFields((f) => ({ ...f, paymentType: type, bankOrProvider: "", accountNumber: "" }));
-    setErrors({});
-  };
-
-  const config = TYPE_CONFIG[fields.paymentType];
-  const Icon = config.icon;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Payment</DialogTitle>
+          <DialogTitle>Send Payment to Employee</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Payment type selector */}
-          <div className="space-y-2">
-            <Label>Payment Type</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {(["bank", "momo", "card"] as PayType[]).map((type) => {
-                const Ic = TYPE_CONFIG[type].icon;
-                const active = fields.paymentType === type;
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => handleTypeChange(type)}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-medium transition-colors ${active
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card text-muted-foreground hover:border-primary/50"
-                      }`}
-                  >
-                    <Ic className="h-5 w-5" />
-                    {TYPE_CONFIG[type].label}
-                  </button>
-                );
-              })}
+          {/* Employee selector */}
+          <div className="space-y-1.5">
+            <Label htmlFor="employee-select">Select Employee</Label>
+            {loadingEmployees ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                Loading employee list…
+              </div>
+            ) : (
+              <select
+                id="employee-select"
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                className="flex h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Choose employee…</option>
+                {employees.map((emp) => (
+                  <option key={emp.employeeId} value={emp.employeeId}>
+                    {emp.name} ({emp.department})
+                  </option>
+                ))}
+              </select>
+            )}
+            {errors.employee && <p className="text-xs text-danger">{errors.employee}</p>}
+          </div>
+
+          {/* Real-time banking details grab from employee info */}
+          {selectedEmployeeId && (
+            <div className="rounded-xl border border-border bg-muted/30 p-4">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                Verified Payment Channel
+              </Label>
+              {loadingBanking ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  Grabbing employee account info…
+                </div>
+              ) : banking ? (
+                <div className="mt-2 flex items-center gap-3">
+                  {banking.preferredMethod === "bank" ? (
+                    <>
+                      <Building2 className="h-8 w-8 text-primary bg-primary/10 rounded-lg p-1.5" />
+                      <div>
+                        <p className="text-sm font-semibold">{banking.bankName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Account: {banking.bankAccountNumber}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Smartphone className="h-8 w-8 text-primary bg-primary/10 rounded-lg p-1.5" />
+                      <div>
+                        <p className="text-sm font-semibold">{banking.momoNetwork}</p>
+                        <p className="text-xs text-muted-foreground">
+                          MoMo No: {banking.momoNumber}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-danger mt-1">
+                  This employee has not updated their banking/momo details yet.
+                </p>
+              )}
             </div>
-          </div>
-
-          {/* Recipient */}
-          <div className="space-y-1.5">
-            <Label htmlFor="cp-name">Recipient Name</Label>
-            <Input
-              id="cp-name"
-              placeholder="Full name or business name"
-              value={fields.recipientName}
-              onChange={(e) => set("recipientName", e.target.value)}
-            />
-            {errors.recipientName && <p className="text-xs text-danger">{errors.recipientName}</p>}
-          </div>
-
-          {/* Provider */}
-          <div className="space-y-1.5">
-            <Label htmlFor="cp-provider">
-              {fields.paymentType === "bank" ? "Bank" : fields.paymentType === "momo" ? "Network" : "Card Network"}
-            </Label>
-            <select
-              id="cp-provider"
-              value={fields.bankOrProvider}
-              onChange={(e) => set("bankOrProvider", e.target.value)}
-              className="flex h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">Select…</option>
-              {config.providers.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-            {errors.bankOrProvider && <p className="text-xs text-danger">{errors.bankOrProvider}</p>}
-          </div>
-
-          {/* Account number */}
-          <div className="space-y-1.5">
-            <Label htmlFor="cp-account">{config.accountLabel}</Label>
-            <Input
-              id="cp-account"
-              placeholder={config.accountPlaceholder}
-              inputMode="numeric"
-              value={fields.accountNumber}
-              onChange={(e) => set("accountNumber", e.target.value)}
-            />
-            {errors.accountNumber && <p className="text-xs text-danger">{errors.accountNumber}</p>}
-          </div>
+          )}
 
           {/* Amount */}
           <div className="space-y-1.5">
-            <Label htmlFor="cp-amount">Amount (GHS)</Label>
+            <Label htmlFor="payment-amount">Amount (GHS)</Label>
             <Input
-              id="cp-amount"
+              id="payment-amount"
               type="number"
               min="0.01"
               step="0.01"
               placeholder="0.00"
-              value={fields.amount}
-              onChange={(e) => set("amount", e.target.value)}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              disabled={!banking}
             />
             {errors.amount && <p className="text-xs text-danger">{errors.amount}</p>}
           </div>
 
           {/* Note */}
           <div className="space-y-1.5">
-            <Label htmlFor="cp-note">Note (optional)</Label>
+            <Label htmlFor="payment-note">Note (optional)</Label>
             <Input
-              id="cp-note"
-              placeholder="e.g. Invoice #1234"
-              value={fields.note}
-              onChange={(e) => set("note", e.target.value)}
+              id="payment-note"
+              placeholder="e.g. June Payroll Bonus"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              disabled={!banking}
             />
           </div>
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
             </DialogClose>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" disabled={submitting || !banking}>
               {submitting ? "Sending…" : "Send Payment"}
             </Button>
           </DialogFooter>
