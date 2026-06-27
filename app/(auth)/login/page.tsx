@@ -71,18 +71,18 @@ export default function LoginPage() {
         <p className="font-medium text-foreground">Try demo accounts (password: password123)</p>
         <ul className="mt-2 space-y-1">
           <li>
-            <button type="button" onClick={() => fillDemo("james.adom@acmecorp.com.gh")} className="text-primary hover:underline text-left">
-              Admin — james.adom@acmecorp.com.gh
+            <button type="button" onClick={() => fillDemo("admin@acme.com.gh")} className="text-primary hover:underline text-left">
+              Admin — admin@acme.com.gh
             </button>
           </li>
           <li>
-            <button type="button" onClick={() => fillDemo("sarah.osei@acmecorp.com.gh")} className="text-primary hover:underline text-left">
-              Finance — sarah.osei@acmecorp.com.gh
+            <button type="button" onClick={() => fillDemo("finance@acme.com.gh")} className="text-primary hover:underline text-left">
+              Finance — finance@acme.com.gh
             </button>
           </li>
           <li>
-            <button type="button" onClick={() => fillDemo("kwame.asante@acmecorp.com.gh")} className="text-primary hover:underline text-left">
-              Employee — kwame.asante@acmecorp.com.gh
+            <button type="button" onClick={() => fillDemo("kwame@acme.com.gh")} className="text-primary hover:underline text-left">
+              Employee — kwame@acme.com.gh
             </button>
           </li>
         </ul>
