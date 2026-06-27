@@ -13,21 +13,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { defaultCompany } from "@/lib/auth-store";
 
-const businessSchema = z.object({
-  companyName: z.string().min(2, "Enter your business name"),
-  phone: z.string().min(10, "Enter a valid phone number"),
-  adminName: z.string().min(2, "Enter your full name"),
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
+const businessSchema = z
+  .object({
+    companyName: z.string().min(2, "Enter your business name"),
+    phone: z.string().min(10, "Enter a valid phone number"),
+    adminName: z.string().min(2, "Enter your full name"),
+    email: z.string().email("Enter a valid email"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
-const employeeSchema = z.object({
-  companyCode: z.string().min(3, "Enter your company code"),
-  name: z.string().min(2, "Enter your full name"),
-  phone: z.string().min(10, "Enter a valid phone number"),
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
+const employeeSchema = z
+  .object({
+    companyCode: z.string().min(3, "Enter your company code"),
+    name: z.string().min(2, "Enter your full name"),
+    phone: z.string().min(10, "Enter a valid phone number"),
+    email: z.string().email("Enter a valid email"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type BusinessForm = z.infer<typeof businessSchema>;
 type EmployeeForm = z.infer<typeof employeeSchema>;
@@ -42,13 +54,13 @@ export default function RegisterPage() {
     defaultValues: { companyCode: defaultCompany.code },
   });
 
-  const onBusiness = async (data: BusinessForm) => {
+  const onBusiness = async ({ confirmPassword: _, ...data }: BusinessForm) => {
     const result = await registerBusiness(data);
     if (result.success) toast.success("Business registered! Welcome.");
     else toast.error(result.error);
   };
 
-  const onEmployee = async (data: EmployeeForm) => {
+  const onEmployee = async ({ confirmPassword: _, ...data }: EmployeeForm) => {
     const result = await registerEmployee(data);
     if (result.success) toast.success("Account created! Welcome.");
     else toast.error(result.error);
@@ -85,7 +97,10 @@ export default function RegisterPage() {
               <Input type="email" {...businessForm.register("email")} />
             </Field>
             <Field label="Password" error={businessForm.formState.errors.password?.message}>
-              <Input type="password" {...businessForm.register("password")} />
+              <Input type="password" autoComplete="new-password" {...businessForm.register("password")} />
+            </Field>
+            <Field label="Confirm password" error={businessForm.formState.errors.confirmPassword?.message}>
+              <Input type="password" autoComplete="new-password" {...businessForm.register("confirmPassword")} />
             </Field>
             <Button type="submit" className="w-full" disabled={businessForm.formState.isSubmitting}>
               Register business
@@ -114,7 +129,10 @@ export default function RegisterPage() {
               <Input type="email" {...employeeForm.register("email")} />
             </Field>
             <Field label="Password" error={employeeForm.formState.errors.password?.message}>
-              <Input type="password" {...employeeForm.register("password")} />
+              <Input type="password" autoComplete="new-password" {...employeeForm.register("password")} />
+            </Field>
+            <Field label="Confirm password" error={employeeForm.formState.errors.confirmPassword?.message}>
+              <Input type="password" autoComplete="new-password" {...employeeForm.register("confirmPassword")} />
             </Field>
             <Button type="submit" className="w-full" disabled={employeeForm.formState.isSubmitting}>
               Register

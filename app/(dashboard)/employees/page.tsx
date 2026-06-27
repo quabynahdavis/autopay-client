@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -10,8 +9,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getCompanyTeam } from "@/services/mock/employees";
-import { getCompanyEmployees } from "@/services/mock/users";
-import type { ManagedEmployee, EmploymentStatus } from "@/types/employee";
+import type { ManagedEmployee } from "@/types/employee";
 import { getCompanyById } from "@/lib/auth-store";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
@@ -19,16 +17,7 @@ function EmployeesContent() {
   const companyId = useCompanyId();
   const { user } = useAuth();
   const company = getCompanyById(companyId);
-  const team = useMemo(() => {
-    const mockTeam = getCompanyTeam(companyId);
-    const registered = getCompanyEmployees(companyId).map((u) => ({
-      id: u.id, employeeId: u.employeeId ?? "—", companyId: u.companyId, name: u.name,
-      email: u.email, department: "—", position: "Staff", manager: "—",
-      status: "active" as EmploymentStatus, dateJoined: new Date().toISOString(),
-    }));
-    const emails = new Set(mockTeam.map((e) => e.email.toLowerCase()));
-    return [...mockTeam, ...registered.filter((e) => !emails.has(e.email.toLowerCase()))];
-  }, [companyId]);
+  const team = getCompanyTeam(companyId);
 
   const columns: ColumnDef<ManagedEmployee>[] = [
     { accessorKey: "name", header: "Name" },

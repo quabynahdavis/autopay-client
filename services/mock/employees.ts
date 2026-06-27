@@ -13,6 +13,7 @@ import type {
   ApprovalRequest,
 } from "@/types/employee";
 import { getRegisteredProfile } from "@/lib/auth-store";
+import { getCompanyEmployees } from "@/services/mock/users";
 
 export const employeeProfiles: Record<string, EmployeeProfile> = {
   "EMP-1042": {
@@ -324,7 +325,27 @@ export function getEmployeeProfile(employeeId: string): EmployeeProfile | undefi
 }
 
 export function getCompanyTeam(companyId: string): ManagedEmployee[] {
-  return managedEmployees.filter((e) => e.companyId === companyId);
+  const team = managedEmployees.filter((e) => e.companyId === companyId);
+  const knownIds = new Set(team.map((e) => e.employeeId));
+
+  for (const user of getCompanyEmployees(companyId)) {
+    if (!user.employeeId || knownIds.has(user.employeeId)) continue;
+    knownIds.add(user.employeeId);
+    team.push({
+      id: user.id,
+      employeeId: user.employeeId,
+      companyId: user.companyId,
+      name: user.name,
+      email: user.email,
+      department: "—",
+      position: "Staff",
+      manager: "—",
+      status: "active",
+      dateJoined: new Date().toISOString().slice(0, 10),
+    });
+  }
+
+  return team;
 }
 
 export function getEmploymentInfo(employeeId: string): EmploymentInfo | undefined {
