@@ -25,10 +25,10 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
       <div className="flex h-16 items-center border-b border-border px-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            BP
+            MP
           </div>
           <div>
-            <p className="text-sm font-semibold">BulkPay GH</p>
+            <p className="text-sm font-semibold">MassPay</p>
             <p className="truncate text-xs text-muted-foreground">
               {user?.companyName ?? "Company"}
             </p>

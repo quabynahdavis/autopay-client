@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "Password is too short"),
+  password: z.string().min(1, "Enter your password"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -22,16 +22,21 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "kwame.asante@acmecorp.com.gh", password: "password123" },
   });
 
   const onSubmit = async (data: LoginForm) => {
     const result = await login(data);
     if (result.success) toast.success("Welcome!");
     else toast.error(result.error);
+  };
+
+  const fillDemo = (email: string) => {
+    setValue("email", email);
+    setValue("password", "password123");
   };
 
   return (
@@ -63,11 +68,23 @@ export default function LoginPage() {
       </form>
 
       <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">Try demo (password: password123)</p>
+        <p className="font-medium text-foreground">Try demo accounts (password: password123)</p>
         <ul className="mt-2 space-y-1">
-          <li>Admin — james.adom@acmecorp.com.gh</li>
-          <li>Finance — sarah.osei@acmecorp.com.gh</li>
-          <li>Employee — kwame.asante@acmecorp.com.gh</li>
+          <li>
+            <button type="button" onClick={() => fillDemo("james.adom@acmecorp.com.gh")} className="text-primary hover:underline text-left">
+              Admin — james.adom@acmecorp.com.gh
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => fillDemo("sarah.osei@acmecorp.com.gh")} className="text-primary hover:underline text-left">
+              Finance — sarah.osei@acmecorp.com.gh
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={() => fillDemo("kwame.asante@acmecorp.com.gh")} className="text-primary hover:underline text-left">
+              Employee — kwame.asante@acmecorp.com.gh
+            </button>
+          </li>
         </ul>
       </div>
 

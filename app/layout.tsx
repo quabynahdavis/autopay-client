@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "BulkPay GH",
-    template: "%s | BulkPay GH",
+    default: "MassPay",
+    template: "%s | MassPay",
   },
   description: "Modern bulk payment platform for Ghanaian businesses",
 };

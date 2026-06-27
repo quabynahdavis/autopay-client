@@ -6,10 +6,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="hidden w-1/2 flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex">
         <div>
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 text-lg font-bold">
-            BP
+            MP
           </div>
           <h1 className="mt-12 text-3xl font-semibold leading-tight">
-            Bulk payments made simple for Ghanaian businesses
+            Mass payments made simple for Ghanaian businesses
           </h1>
           <p className="mt-4 max-w-md text-primary-foreground/80">
             Process payroll, vendor payments, and bulk transfers securely with
@@ -25,9 +25,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="mb-8 lg:hidden">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-                BP
+                MP
               </div>
-              <span className="font-semibold">BulkPay GH</span>
+              <span className="font-semibold">MassPay</span>
             </Link>
           </div>
           {children}

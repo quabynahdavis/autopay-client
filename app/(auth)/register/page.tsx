@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { defaultCompany } from "@/lib/auth-store";
 
 const businessSchema = z
   .object({
@@ -51,7 +50,6 @@ export default function RegisterPage() {
   const businessForm = useForm<BusinessForm>({ resolver: zodResolver(businessSchema) });
   const employeeForm = useForm<EmployeeForm>({
     resolver: zodResolver(employeeSchema),
-    defaultValues: { companyCode: defaultCompany.code },
   });
 
   const onBusiness = async ({ confirmPassword: _, ...data }: BusinessForm) => {
@@ -70,7 +68,7 @@ export default function RegisterPage() {
     <div>
       <h2 className="text-2xl font-semibold tracking-tight">Create account</h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Choose how you will use BulkPay GH
+        Choose how you will use MassPay
       </p>
 
       <Tabs value={tab} onValueChange={setTab} className="mt-8">
@@ -112,9 +110,6 @@ export default function RegisterPage() {
           <p className="text-sm text-muted-foreground">
             Join your company using the code from your employer.
           </p>
-          <div className="rounded-xl bg-muted/50 p-3 text-sm">
-            Demo company code: <strong>{defaultCompany.code}</strong>
-          </div>
           <form onSubmit={employeeForm.handleSubmit(onEmployee)} className="space-y-4">
             <Field label="Company code" error={employeeForm.formState.errors.companyCode?.message}>
               <Input placeholder="e.g. ACME-GH" {...employeeForm.register("companyCode")} />
