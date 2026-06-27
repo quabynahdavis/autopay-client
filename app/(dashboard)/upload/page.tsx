@@ -1,3 +1,4 @@
+/** biome-ignore-all assist/source/organizeImports: <> */
 "use client";
 
 import { useState } from "react";
@@ -20,7 +21,6 @@ const SAMPLE_PREVIEW: Payment[] = [
 ];
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Payment } from "@/types/payment";
 
 export default function UploadBatchPage() {
   const { can } = useAuth();
