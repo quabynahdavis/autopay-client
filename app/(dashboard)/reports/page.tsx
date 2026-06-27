@@ -6,9 +6,11 @@ import { toast } from "sonner";
 import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { reportNavigation } from "@/constants/navigation";
-import { monthlyVolume } from "@/services/mock/payments";
+import { fetchMonthlyVolume } from "@/services/api/payments";
+import { useApiData } from "@/hooks/useApiData";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -20,6 +22,7 @@ import {
 
 export default function ReportsPage() {
   const pathname = usePathname();
+  const { data: monthlyVolume, loading } = useApiData(fetchMonthlyVolume, []);
 
   const handleExport = (format: "csv" | "excel" | "pdf") => {
     toast.success(`Report exported as ${format.toUpperCase()}`);
@@ -56,26 +59,30 @@ export default function ReportsPage() {
       <FilterBar onExport={handleExport} />
 
       <SectionCard title="Monthly Summary" description="Payment volume by month">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Month</TableHead>
-              <TableHead>Volume</TableHead>
-              <TableHead>Transactions</TableHead>
-              <TableHead>Success Rate</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {monthlyVolume.map((row, i) => (
-              <TableRow key={row.month}>
-                <TableCell className="font-medium">{row.month} 2026</TableCell>
-                <TableCell>{formatCurrency(row.volume)}</TableCell>
-                <TableCell>{Math.round(row.volume / 850)}</TableCell>
-                <TableCell>{(97 + (i % 3) * 0.5).toFixed(1)}%</TableCell>
+        {loading ? (
+          <Skeleton className="h-48 w-full rounded-xl" />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Month</TableHead>
+                <TableHead>Volume</TableHead>
+                <TableHead>Transactions</TableHead>
+                <TableHead>Success Rate</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(monthlyVolume ?? []).map((row, i) => (
+                <TableRow key={row.month}>
+                  <TableCell className="font-medium">{row.month} 2026</TableCell>
+                  <TableCell>{formatCurrency(row.volume)}</TableCell>
+                  <TableCell>{Math.round(row.volume / 850)}</TableCell>
+                  <TableCell>{(97 + (i % 3) * 0.5).toFixed(1)}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </SectionCard>
     </div>
   );

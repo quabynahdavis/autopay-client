@@ -7,7 +7,9 @@ import { SettingsLayout } from "@/features/settings/SettingsLayout";
 import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { teamMembers } from "@/services/mock/settings";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchTeamMembers } from "@/services/api/settings";
+import { useApiData } from "@/hooks/useApiData";
 import type { TeamMember } from "@/types/user";
 import { getRoleLabel, type UserRole } from "@/types/auth";
 import { formatDate } from "@/lib/utils";
@@ -45,6 +47,8 @@ const columns: ColumnDef<TeamMember>[] = [
 ];
 
 export default function TeamSettingsPage() {
+  const { data: teamMembers, loading } = useApiData(fetchTeamMembers, []);
+
   return (
     <SettingsLayout>
       <PageHeader
@@ -63,7 +67,11 @@ export default function TeamSettingsPage() {
         }
       />
       <SectionCard title="Team Directory" description="Role management">
-        <DataTable columns={columns} data={teamMembers} searchKey="name" stickyHeader />
+        {loading ? (
+          <Skeleton className="h-64 w-full rounded-xl" />
+        ) : (
+          <DataTable columns={columns} data={teamMembers ?? []} searchKey="name" stickyHeader />
+        )}
       </SectionCard>
       <SectionCard title="Role Permissions" description="Overview of access levels">
         <div className="grid gap-4 sm:grid-cols-2">

@@ -8,7 +8,9 @@ import { SettingsLayout } from "@/features/settings/SettingsLayout";
 import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { apiKeys } from "@/services/mock/settings";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchApiKeys, revokeApiKey } from "@/services/api/settings";
+import { useApiData } from "@/hooks/useApiData";
 import { formatDate } from "@/lib/utils";
 import {
   Table,
@@ -20,7 +22,21 @@ import {
 } from "@/components/ui/table";
 
 export default function ApiKeysSettingsPage() {
+  const { data: apiKeys, loading, refetch } = useApiData(fetchApiKeys, []);
   const [revokeOpen, setRevokeOpen] = useState(false);
+  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
+
+  const handleRevoke = async () => {
+    if (!selectedKeyId) return;
+    try {
+      await revokeApiKey(selectedKeyId);
+      toast.success("API key revoked");
+      setRevokeOpen(false);
+      await refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Revoke failed");
+    }
+  };
 
   return (
     <SettingsLayout>
@@ -33,52 +49,59 @@ export default function ApiKeysSettingsPage() {
           { label: "API Keys" },
         ]}
         actions={
-          <Button onClick={() => toast.success("New API key created")}>
+          <Button onClick={() => toast.info("Use POST /settings/api-keys from the API")}>
             <Plus className="h-4 w-4" />
             Create Key
           </Button>
         }
       />
       <SectionCard title="Active Keys">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Key</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Last Used</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {apiKeys.map((key) => (
-              <TableRow key={key.id}>
-                <TableCell className="font-medium">{key.name}</TableCell>
-                <TableCell className="font-mono text-sm">{key.prefix}</TableCell>
-                <TableCell>{formatDate(key.createdAt)}</TableCell>
-                <TableCell>{key.lastUsed ? formatDate(key.lastUsed) : "—"}</TableCell>
-                <TableCell>
-                  <Badge variant={key.status === "active" ? "success" : "danger"}>
-                    {key.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  {key.status === "active" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRevokeOpen(true)}
-                      aria-label={`Revoke ${key.name}`}
-                    >
-                      <Trash2 className="h-4 w-4 text-danger" />
-                    </Button>
-                  )}
-                </TableCell>
+        {loading ? (
+          <Skeleton className="h-48 w-full rounded-xl" />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Key</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Last Used</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(apiKeys ?? []).map((key) => (
+                <TableRow key={key.id}>
+                  <TableCell className="font-medium">{key.name}</TableCell>
+                  <TableCell className="font-mono text-sm">{key.prefix}</TableCell>
+                  <TableCell>{formatDate(key.createdAt)}</TableCell>
+                  <TableCell>{key.lastUsed ? formatDate(key.lastUsed) : "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={key.status === "active" ? "success" : "danger"}>
+                      {key.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {key.status === "active" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedKeyId(key.id);
+                          setRevokeOpen(true);
+                        }}
+                        aria-label={`Revoke ${key.name}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-danger" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </SectionCard>
 
       <ConfirmationDialog
@@ -88,7 +111,7 @@ export default function ApiKeysSettingsPage() {
         description="This action cannot be undone. Applications using this key will lose access."
         confirmLabel="Revoke Key"
         variant="destructive"
-        onConfirm={() => toast.success("API key revoked")}
+        onConfirm={handleRevoke}
       />
     </SettingsLayout>
   );

@@ -4,10 +4,12 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { getEmployeePayments } from "@/services/mock/employees";
+import { fetchSalaryPayments } from "@/services/api/employees";
+import { useApiData } from "@/hooks/useApiData";
 import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
 import {
   Select,
@@ -27,11 +29,14 @@ import {
 
 export default function EmployeePaymentsPage() {
   const { user } = useAuth();
-  const employeeId = user?.employeeId ?? "EMP-1042";
-  const payments = getEmployeePayments(employeeId);
+  const employeeId = user?.employeeId ?? "";
+  const { data: payments, loading } = useApiData(
+    () => fetchSalaryPayments(employeeId),
+    [employeeId]
+  );
   const [year, setYear] = useState("2026");
 
-  const filtered = payments.filter((p) => String(p.year) === year);
+  const filtered = (payments ?? []).filter((p) => String(p.year) === year);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -50,59 +55,69 @@ export default function EmployeePaymentsPage() {
       </div>
 
       <SectionCard title="Salary Payments">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Period</TableHead>
-                <TableHead>Gross</TableHead>
-                <TableHead>Bonus</TableHead>
-                <TableHead>Allowances</TableHead>
-                <TableHead>Deductions</TableHead>
-                <TableHead>Tax</TableHead>
-                <TableHead>Net Salary</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Payslip</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">
-                    {p.month} {p.year}
-                  </TableCell>
-                  <TableCell>{formatCurrency(p.grossSalary)}</TableCell>
-                  <TableCell>{formatCurrency(p.bonus)}</TableCell>
-                  <TableCell>{formatCurrency(p.allowances)}</TableCell>
-                  <TableCell>{formatCurrency(p.deductions)}</TableCell>
-                  <TableCell>{formatCurrency(p.tax)}</TableCell>
-                  <TableCell className="font-semibold">{formatCurrency(p.netSalary)}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        p.status === "paid" ? "success" : p.status === "pending" ? "warning" : "danger"
-                      }
-                    >
-                      {p.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {p.status === "paid" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toast.success(`Payslip for ${p.month} ${p.year} downloaded`)}
-                        aria-label="Download payslip"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </TableCell>
+        {loading ? (
+          <Skeleton className="h-64 w-full rounded-xl" />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Period</TableHead>
+                  <TableHead>Gross</TableHead>
+                  <TableHead>Bonus</TableHead>
+                  <TableHead>Allowances</TableHead>
+                  <TableHead>Deductions</TableHead>
+                  <TableHead>Tax</TableHead>
+                  <TableHead>Net Salary</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Payslip</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">
+                      {p.month} {p.year}
+                    </TableCell>
+                    <TableCell>{formatCurrency(p.grossSalary)}</TableCell>
+                    <TableCell>{formatCurrency(p.bonus)}</TableCell>
+                    <TableCell>{formatCurrency(p.allowances)}</TableCell>
+                    <TableCell>{formatCurrency(p.deductions)}</TableCell>
+                    <TableCell>{formatCurrency(p.tax)}</TableCell>
+                    <TableCell className="font-semibold">{formatCurrency(p.netSalary)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          p.status === "paid"
+                            ? "success"
+                            : p.status === "pending"
+                              ? "warning"
+                              : "danger"
+                        }
+                      >
+                        {p.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {p.status === "paid" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            toast.success(`Payslip for ${p.month} ${p.year} downloaded`)
+                          }
+                          aria-label="Download payslip"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </SectionCard>
     </div>
   );

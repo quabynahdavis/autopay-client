@@ -12,15 +12,16 @@ import { useRouter } from "next/navigation";
 import type { AuthUser, LoginCredentials } from "@/types/auth";
 import { getPostLoginRedirect, isAdminRole, isEmployeeRole } from "@/types/auth";
 import type { RegisterBusinessInput, RegisterEmployeeInput } from "@/types/company";
-import { authenticate } from "@/services/mock/users";
 import {
-  registerBusiness,
-  registerEmployee,
-} from "@/lib/auth-store";
+  fetchCurrentUser,
+  loginApi,
+  logoutApi,
+  registerBusinessApi,
+  registerEmployeeApi,
+} from "@/services/api/auth";
 import { hasPermission } from "@/constants/roles";
 import type { Permission } from "@/types/auth";
-
-const STORAGE_KEY = "bulkpay_auth_user";
+import { USER_KEY, getToken } from "@/lib/api/client";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -45,66 +46,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setUser(JSON.parse(stored));
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    setIsLoading(false);
-  }, []);
-
   const persistUser = useCallback((authUser: AuthUser) => {
     setUser(authUser);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
+    localStorage.setItem(USER_KEY, JSON.stringify(authUser));
   }, []);
+
+  useEffect(() => {
+    async function restoreSession() {
+      try {
+        const stored = localStorage.getItem(USER_KEY);
+        if (stored) setUser(JSON.parse(stored) as AuthUser);
+        if (!getToken()) {
+          setIsLoading(false);
+          return;
+        }
+        const freshUser = await fetchCurrentUser();
+        persistUser(freshUser);
+      } catch {
+        localStorage.removeItem(USER_KEY);
+        logoutApi();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void restoreSession();
+  }, [persistUser]);
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
-      await new Promise((r) => setTimeout(r, 300));
-      const authUser = authenticate(credentials);
-      if (!authUser) {
-        return { success: false, error: "Wrong email or password. Try again." };
+      try {
+        const result = await loginApi(credentials);
+        persistUser(result.user);
+        router.push(getPostLoginRedirect(result.user.role));
+        return { success: true };
+      } catch (err) {
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : "Wrong email or password. Try again.",
+        };
       }
-      persistUser(authUser);
-      router.push(getPostLoginRedirect(authUser.role));
-      return { success: true };
     },
     [router, persistUser]
   );
 
   const handleRegisterBusiness = useCallback(
     async (input: RegisterBusinessInput) => {
-      await new Promise((r) => setTimeout(r, 300));
-      const result = registerBusiness(input);
-      if (!result.success || !result.user) {
-        return { success: false, error: result.error };
+      try {
+        const result = await registerBusinessApi(input);
+        persistUser(result.user);
+        router.push("/");
+        return { success: true };
+      } catch (err) {
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : "Registration failed",
+        };
       }
-      persistUser(result.user);
-      router.push("/");
-      return { success: true };
     },
     [router, persistUser]
   );
 
   const handleRegisterEmployee = useCallback(
     async (input: RegisterEmployeeInput) => {
-      await new Promise((r) => setTimeout(r, 300));
-      const result = registerEmployee(input);
-      if (!result.success || !result.user) {
-        return { success: false, error: result.error };
+      try {
+        const result = await registerEmployeeApi(input);
+        persistUser(result.user);
+        router.push("/employee");
+        return { success: true };
+      } catch (err) {
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : "Registration failed",
+        };
       }
-      persistUser(result.user);
-      router.push("/employee");
-      return { success: true };
     },
     [router, persistUser]
   );
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
+    logoutApi();
+    localStorage.removeItem(USER_KEY);
     router.push("/login");
   }, [router]);
 

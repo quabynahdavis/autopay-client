@@ -2,11 +2,13 @@
 
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { getEmployeeDocuments } from "@/services/mock/employees";
+import { fetchDocuments } from "@/services/api/employees";
+import { useApiData } from "@/hooks/useApiData";
 import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { UploadZone } from "@/components/shared/UploadZone";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { FileText } from "lucide-react";
 
@@ -21,8 +23,11 @@ const docTypes = [
 
 export default function EmployeeDocumentsPage() {
   const { user } = useAuth();
-  const employeeId = user?.employeeId ?? "EMP-1042";
-  const documents = getEmployeeDocuments(employeeId);
+  const employeeId = user?.employeeId ?? "";
+  const { data: documents, loading } = useApiData(
+    () => fetchDocuments(employeeId),
+    [employeeId]
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -47,25 +52,29 @@ export default function EmployeeDocumentsPage() {
       </SectionCard>
 
       <SectionCard title="My Documents">
-        <ul className="space-y-3">
-          {documents.map((doc) => (
-            <li
-              key={doc.id}
-              className="flex items-center justify-between rounded-xl border border-border p-4"
-            >
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-sm font-medium">{doc.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {doc.type} · {doc.size} · {formatDate(doc.uploadedAt)}
-                  </p>
+        {loading ? (
+          <Skeleton className="h-48 w-full rounded-xl" />
+        ) : (
+          <ul className="space-y-3">
+            {(documents ?? []).map((doc) => (
+              <li
+                key={doc.id}
+                className="flex items-center justify-between rounded-xl border border-border p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">{doc.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {doc.type} · {doc.size} · {formatDate(doc.uploadedAt)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <Badge variant="outline">Uploaded</Badge>
-            </li>
-          ))}
-        </ul>
+                <Badge variant="outline">Uploaded</Badge>
+              </li>
+            ))}
+          </ul>
+        )}
       </SectionCard>
     </div>
   );

@@ -7,23 +7,48 @@ import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { UploadZone } from "@/components/shared/UploadZone";
 import { PaymentsTable } from "@/features/payments/PaymentTable";
 import { Button } from "@/components/ui/button";
+import { createBatch } from "@/services/api/payments";
 import { sampleBatchPayments } from "@/services/mock/payments";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Payment } from "@/types/payment";
 
 export default function UploadBatchPage() {
   const { can } = useAuth();
   const [uploaded, setUploaded] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [previewPayments] = useState<Payment[]>(sampleBatchPayments);
 
-  const totalAmount = sampleBatchPayments.reduce((sum, p) => sum + p.amount, 0);
-  const bankCount = sampleBatchPayments.filter((p) => p.paymentType === "bank").length;
-  const momoCount = sampleBatchPayments.filter((p) => p.paymentType === "momo").length;
-  const errors = sampleBatchPayments.filter((p) => !p.validation?.valid).length;
+  const totalAmount = previewPayments.reduce((sum, p) => sum + p.amount, 0);
+  const bankCount = previewPayments.filter((p) => p.paymentType === "bank").length;
+  const momoCount = previewPayments.filter((p) => p.paymentType === "momo").length;
+  const errors = previewPayments.filter((p) => !p.validation?.valid).length;
 
   const handleFileSelect = () => {
     setUploaded(true);
     toast.success("File uploaded successfully");
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await createBatch(
+        `Vendor Payments — ${new Date().toLocaleString("en-GB", { month: "long" })}`,
+        previewPayments.map((p) => ({
+          recipientName: p.recipientName,
+          accountNumber: p.accountNumber,
+          paymentType: p.paymentType,
+          bankOrProvider: p.bankOrProvider,
+          amount: p.amount,
+        }))
+      );
+      toast.success("Batch submitted — Finance will review and approve");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit batch");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -46,7 +71,7 @@ export default function UploadBatchPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {[
               { label: "Total Amount", value: formatCurrency(totalAmount) },
-              { label: "Recipients", value: sampleBatchPayments.length },
+              { label: "Recipients", value: previewPayments.length },
               { label: "Bank Payments", value: bankCount },
               { label: "MoMo Payments", value: momoCount },
               { label: "Validation Errors", value: errors },
@@ -87,18 +112,13 @@ export default function UploadBatchPage() {
                   </Link>
                 </Button>
               ) : (
-                <Button
-                  size="lg"
-                  onClick={() =>
-                    toast.success("Batch submitted — Finance will review and approve")
-                  }
-                >
+                <Button size="lg" onClick={handleSubmit} disabled={submitting}>
                   Submit for Approval
                 </Button>
               )
             }
           >
-            <PaymentsTable data={sampleBatchPayments} />
+            <PaymentsTable data={previewPayments} />
           </SectionCard>
         </>
       )}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Batch } from "@/types/payment";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { batchStatusLabels } from "@/constants/status";
+import { approveBatch, rejectBatch } from "@/services/api/payments";
 import {
   Dialog,
   DialogContent,
@@ -22,21 +23,39 @@ interface ApprovalModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "approve" | "reject" | "view";
+  onComplete?: () => void;
 }
 
-export function ApprovalModal({ batch, open, onOpenChange, mode }: ApprovalModalProps) {
+export function ApprovalModal({
+  batch,
+  open,
+  onOpenChange,
+  mode,
+  onComplete,
+}: ApprovalModalProps) {
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   if (!batch) return null;
 
-  const handleAction = (action: "approve" | "reject") => {
-    toast.success(
-      action === "approve"
-        ? `Batch ${batch.id} approved successfully`
-        : `Batch ${batch.id} rejected`
-    );
-    onOpenChange(false);
-    setNotes("");
+  const handleAction = async (action: "approve" | "reject") => {
+    setSubmitting(true);
+    try {
+      if (action === "approve") await approveBatch(batch.id, notes || undefined);
+      else await rejectBatch(batch.id, notes || undefined);
+      toast.success(
+        action === "approve"
+          ? `Batch ${batch.id} approved successfully`
+          : `Batch ${batch.id} rejected`
+      );
+      onOpenChange(false);
+      setNotes("");
+      await onComplete?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Action failed");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -95,14 +114,16 @@ export function ApprovalModal({ batch, open, onOpenChange, mode }: ApprovalModal
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {mode === "view" ? "Close" : "Cancel"}
           </Button>
           {mode === "approve" && (
-            <Button onClick={() => handleAction("approve")}>Approve Batch</Button>
+            <Button onClick={() => handleAction("approve")} disabled={submitting}>
+              Approve Batch
+            </Button>
           )}
           {mode === "reject" && (
-            <Button variant="destructive" onClick={() => handleAction("reject")}>
+            <Button variant="destructive" onClick={() => handleAction("reject")} disabled={submitting}>
               Reject Batch
             </Button>
           )}

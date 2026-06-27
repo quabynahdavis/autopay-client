@@ -4,7 +4,9 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
-import { auditLogs } from "@/services/mock/audit";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchAuditLogs } from "@/services/api/settings";
+import { useApiData } from "@/hooks/useApiData";
 import type { AuditLog } from "@/types/audit";
 import { formatDate } from "@/lib/utils";
 
@@ -39,6 +41,8 @@ const columns: ColumnDef<AuditLog>[] = [
 ];
 
 export default function AuditLogsPage() {
+  const { data: auditLogs, loading } = useApiData(fetchAuditLogs, []);
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageHeader
@@ -50,14 +54,18 @@ export default function AuditLogsPage() {
         ]}
       />
 
-      <SectionCard title="Activity Log" description={`${auditLogs.length} entries`}>
-        <DataTable
-          columns={columns}
-          data={auditLogs}
-          searchKey="user"
-          searchPlaceholder="Search by user or action..."
-          stickyHeader
-        />
+      <SectionCard title="Activity Log" description={`${auditLogs?.length ?? 0} entries`}>
+        {loading ? (
+          <Skeleton className="h-64 w-full rounded-xl" />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={auditLogs ?? []}
+            searchKey="user"
+            searchPlaceholder="Search by user or action..."
+            stickyHeader
+          />
+        )}
       </SectionCard>
     </div>
   );

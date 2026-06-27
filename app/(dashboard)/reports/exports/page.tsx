@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { Download } from "lucide-react";
 import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { reportNavigation } from "@/constants/navigation";
-import { exportHistory } from "@/services/mock/settings";
+import { fetchExportHistory } from "@/services/api/settings";
+import { useApiData } from "@/hooks/useApiData";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,6 +23,7 @@ import {
 
 export default function ExportHistoryPage() {
   const pathname = usePathname();
+  const { data: exportHistory, loading } = useApiData(fetchExportHistory, []);
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -52,38 +55,42 @@ export default function ExportHistoryPage() {
       </nav>
 
       <SectionCard title="Recent Exports">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Report Name</TableHead>
-              <TableHead>Format</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {exportHistory.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{item.type}</Badge>
-                </TableCell>
-                <TableCell>{formatDate(item.date)}</TableCell>
-                <TableCell>{item.size}</TableCell>
-                <TableCell>
-                  <Badge variant="success">Completed</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" aria-label={`Download ${item.name}`}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </TableCell>
+        {loading ? (
+          <Skeleton className="h-48 w-full rounded-xl" />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Report Name</TableHead>
+                <TableHead>Format</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(exportHistory ?? []).map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{item.type}</Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(item.date)}</TableCell>
+                  <TableCell>{item.size}</TableCell>
+                  <TableCell>
+                    <Badge variant="success">Completed</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" aria-label={`Download ${item.name}`}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </SectionCard>
     </div>
   );

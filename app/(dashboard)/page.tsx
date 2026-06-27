@@ -7,11 +7,14 @@ import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { ApprovalQueuePreview } from "@/features/dashboard/ApprovalQueuePreview";
 import { Button } from "@/components/ui/button";
-import { dashboardStats } from "@/services/mock/payments";
+import { fetchDashboardStats } from "@/services/api/payments";
+import { useApiData } from "@/hooks/useApiData";
 import { formatCurrency } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const { user, can } = useAuth();
+  const { data: stats, loading } = useApiData(fetchDashboardStats, []);
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -21,19 +24,28 @@ export default function DashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <StatCard
-          title="Paid this month"
-          value={dashboardStats.successful}
-          subtitle={formatCurrency(dashboardStats.totalPayments.amount)}
-          icon={Wallet}
-          variant="success"
-        />
-        <StatCard
-          title="Waiting to pay"
-          value={dashboardStats.pending}
-          icon={Wallet}
-          variant="warning"
-        />
+        {loading || !stats ? (
+          <>
+            <Skeleton className="h-28 rounded-xl" />
+            <Skeleton className="h-28 rounded-xl" />
+          </>
+        ) : (
+          <>
+            <StatCard
+              title="Paid this month"
+              value={stats.successful}
+              subtitle={formatCurrency(stats.totalPayments.amount)}
+              icon={Wallet}
+              variant="success"
+            />
+            <StatCard
+              title="Waiting to pay"
+              value={stats.pending}
+              icon={Wallet}
+              variant="warning"
+            />
+          </>
+        )}
       </div>
 
       <SectionCard title="What do you want to do?">
