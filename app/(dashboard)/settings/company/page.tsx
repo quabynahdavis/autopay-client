@@ -57,7 +57,7 @@ export default function CompanySettingsPage() {
         title="Company"
         description="Manage your organization details"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Settings", href: "/settings" },
           { label: "Company" },
         ]}

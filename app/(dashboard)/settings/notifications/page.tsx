@@ -21,7 +21,7 @@ export default function NotificationsSettingsPage() {
         title="Notifications"
         description="Configure how you receive alerts"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Settings", href: "/settings" },
           { label: "Notifications" },
         ]}

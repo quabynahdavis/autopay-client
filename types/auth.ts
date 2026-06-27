@@ -50,5 +50,5 @@ export function getRoleLabel(role: UserRole): string {
 }
 
 export function getPostLoginRedirect(role: UserRole): string {
-  return role === "employee" ? "/employee" : "/";
+  return role === "employee" ? "/employee" : "/dashboard";
 }

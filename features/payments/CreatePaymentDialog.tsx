@@ -160,11 +160,10 @@ export function CreatePaymentDialog({
                     key={type}
                     type="button"
                     onClick={() => handleTypeChange(type)}
-                    className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-medium transition-colors ${
-                      active
+                    className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-medium transition-colors ${active
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border bg-card text-muted-foreground hover:border-primary/50"
-                    }`}
+                      }`}
                   >
                     <Ic className="h-5 w-5" />
                     {TYPE_CONFIG[type].label}

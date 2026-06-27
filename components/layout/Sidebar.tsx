@@ -23,7 +23,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
       aria-label="Admin navigation"
     >
       <div className="flex h-16 items-center border-b border-border px-6">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
             MP
           </div>

@@ -34,7 +34,7 @@ export default function PayrollReportsPage() {
         title="Payroll Reports"
         description="Employee payroll payment summaries"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Reports", href: "/reports" },
           { label: "Payroll" },
         ]}

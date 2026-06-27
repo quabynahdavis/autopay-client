@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const result = await registerBusinessApi(input);
         persistUser(result.user);
-        router.push("/");
+        router.push("/dashboard");
         return { success: true };
       } catch (err) {
         return {

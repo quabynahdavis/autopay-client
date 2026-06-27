@@ -25,7 +25,7 @@ export interface NavItem {
 }
 
 export const adminNavigation: NavItem[] = [
-  { label: "Home", href: "/", icon: LayoutDashboard, permission: "admin.dashboard" },
+  { label: "Home", href: "/dashboard", icon: LayoutDashboard, permission: "admin.dashboard" },
   { label: "Send Payment", href: "/upload", icon: Upload, permission: "admin.upload" },
   { label: "All Payments", href: "/payments", icon: CreditCard, permission: "admin.payments" },
   { label: "Approve", href: "/approval", icon: CheckCircle, permission: "admin.approval" },

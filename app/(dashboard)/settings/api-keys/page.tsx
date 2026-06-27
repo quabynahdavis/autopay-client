@@ -44,7 +44,7 @@ export default function ApiKeysSettingsPage() {
         title="API Keys"
         description="Manage API keys for integrations"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Settings", href: "/settings" },
           { label: "API Keys" },
         ]}

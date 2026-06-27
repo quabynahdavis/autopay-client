@@ -36,7 +36,7 @@ export default function SecuritySettingsPage() {
         title="Security"
         description="Manage password and authentication settings"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Settings", href: "/settings" },
           { label: "Security" },
         ]}

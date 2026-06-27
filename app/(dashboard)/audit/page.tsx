@@ -49,7 +49,7 @@ export default function AuditLogsPage() {
         title="Audit Logs"
         description="Track all user actions and system events"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Audit Logs" },
         ]}
       />

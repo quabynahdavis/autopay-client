@@ -31,7 +31,7 @@ export default function ExportHistoryPage() {
         title="Export History"
         description="Previously exported reports and files"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Reports", href: "/reports" },
           { label: "Export History" },
         ]}

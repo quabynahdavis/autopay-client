@@ -42,7 +42,7 @@ export default function RecipientsPage() {
         title="Recipients"
         description="Manage payment recipients for your organization"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Recipients" },
         ]}
         actions={

@@ -176,7 +176,7 @@ export default function UploadBatchPage() {
         title="Upload Batch"
         description="Upload a CSV file to process bulk payments"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Upload Batch" },
         ]}
         actions={

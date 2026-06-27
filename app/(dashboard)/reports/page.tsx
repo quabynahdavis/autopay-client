@@ -34,7 +34,7 @@ export default function ReportsPage() {
         title="Reports"
         description="Monthly payment reports and analytics"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Reports" },
         ]}
       />

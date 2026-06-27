@@ -26,7 +26,7 @@ export default function PaymentsPage() {
         title="Payments"
         description="View and manage all payment transactions"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Payments" },
         ]}
         actions={

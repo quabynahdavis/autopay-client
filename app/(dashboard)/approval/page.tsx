@@ -80,7 +80,7 @@ function ApprovalQueueContent() {
         title="Payment Approvals"
         description="Review and approve payment batches and payout detail changes"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Approvals" },
         ]}
       />

@@ -55,7 +55,7 @@ export default function TeamSettingsPage() {
         title="Team Members"
         description="Manage team access and roles"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Settings", href: "/settings" },
           { label: "Team Members" },
         ]}

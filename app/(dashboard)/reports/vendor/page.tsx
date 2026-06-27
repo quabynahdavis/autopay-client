@@ -33,7 +33,7 @@ export default function VendorReportsPage() {
         title="Vendor Payments"
         description="Vendor payment history and summaries"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/dashboard" },
           { label: "Reports", href: "/reports" },
           { label: "Vendor Payments" },
         ]}
