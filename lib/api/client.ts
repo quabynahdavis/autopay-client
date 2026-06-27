@@ -1,5 +1,9 @@
+// In the browser the rewrite in next.config.ts transparently forwards /api/*
+// to the backend, so no cross-origin request (and no CORS) is ever made.
+// NEXT_PUBLIC_API_URL can still override this for special environments.
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+  process.env.NEXT_PUBLIC_API_URL ?? "/api";
+
 
 export const TOKEN_KEY = "bulkpay_auth_token";
 export const USER_KEY = "bulkpay_auth_user";
