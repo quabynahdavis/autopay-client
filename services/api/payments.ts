@@ -78,7 +78,7 @@ export function rejectBatch(id: string, comment?: string) {
 export interface CreateBatchPayment {
   recipientName: string;
   accountNumber: string;
-  paymentType: "bank" | "momo";
+  paymentType: "bank" | "momo" | "card";
   bankOrProvider: string;
   amount: number;
 }

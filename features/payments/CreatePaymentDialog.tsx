@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
-import { CreditCard, Building2, Smartphone, Plus } from "lucide-react";
+import { CreditCard, Building2, Smartphone } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,38 +19,12 @@ import { createPayment } from "@/services/api/payments";
 // ── Provider lists ────────────────────────────────────────────────────────────
 
 const BANK_PROVIDERS = [
-  "GCB Bank",
-  "Ecobank Ghana",
-  "Fidelity Bank",
-  "Absa Bank",
-  "Standard Chartered",
-  "Stanbic Bank",
-  "CalBank",
-  "Zenith Bank",
-  "UBA Ghana",
-  "Republic Bank",
+  "GCB Bank", "Ecobank Ghana", "Fidelity Bank", "Absa Bank",
+  "Standard Chartered", "Stanbic Bank", "CalBank", "Zenith Bank",
+  "UBA Ghana", "Republic Bank",
 ];
-
 const MOMO_PROVIDERS = ["MTN MoMo", "Vodafone Cash", "AirtelTigo Money"];
-
 const CARD_PROVIDERS = ["Visa", "Mastercard", "GH-Link", "AmEx"];
-
-const schema = z.object({
-  recipientName: z.string().min(2, "Name required"),
-  paymentType: z.enum(["bank", "momo", "card"]),
-  bankOrProvider: z.string().min(1, "Select a provider"),
-  accountNumber: z.string().min(1, "Required"),
-  amount: z.coerce.number().positive("Must be greater than 0"),
-  note: z.string().optional(),
-});
-
-type FormData = z.infer<typeof schema>;
-
-interface CreatePaymentDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-}
 
 const TYPE_CONFIG = {
   bank: {
@@ -71,7 +42,7 @@ const TYPE_CONFIG = {
     providers: MOMO_PROVIDERS,
   },
   card: {
-    label: "Credit / Debit Card",
+    label: "Card",
     icon: CreditCard,
     accountLabel: "Card Number",
     accountPlaceholder: "16-digit card number",
@@ -79,42 +50,79 @@ const TYPE_CONFIG = {
   },
 } as const;
 
+type PayType = keyof typeof TYPE_CONFIG;
+
+interface Fields {
+  recipientName: string;
+  paymentType: PayType;
+  bankOrProvider: string;
+  accountNumber: string;
+  amount: string;
+  note: string;
+}
+
+const EMPTY: Fields = {
+  recipientName: "",
+  paymentType: "bank",
+  bankOrProvider: "",
+  accountNumber: "",
+  amount: "",
+  note: "",
+};
+
+interface CreatePaymentDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+}
+
 export function CreatePaymentDialog({
   open,
   onOpenChange,
   onSuccess,
 }: CreatePaymentDialogProps) {
+  const [fields, setFields] = useState<Fields>(EMPTY);
+  const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { paymentType: "bank" },
-  });
+  const set = (key: keyof Fields, value: string) =>
+    setFields((f) => ({ ...f, [key]: value }));
 
-  const paymentType = watch("paymentType");
-  const config = TYPE_CONFIG[paymentType];
-  const Icon = config.icon;
+  const validate = (): boolean => {
+    const e: Partial<Record<keyof Fields, string>> = {};
+    if (!fields.recipientName.trim()) e.recipientName = "Name required";
+    if (!fields.bankOrProvider) e.bankOrProvider = "Select a provider";
+    if (!fields.accountNumber.trim()) {
+      e.accountNumber = "Required";
+    } else if (fields.paymentType === "bank" && !/^\d{10,16}$/.test(fields.accountNumber)) {
+      e.accountNumber = "Must be 10–16 digits";
+    } else if (fields.paymentType === "momo" && !/^0\d{9}$/.test(fields.accountNumber)) {
+      e.accountNumber = "Must start with 0 and be 10 digits";
+    } else if (fields.paymentType === "card" && !/^\d{16}$/.test(fields.accountNumber.replace(/\s|-/g, ""))) {
+      e.accountNumber = "Must be 16 digits";
+    }
+    const amt = parseFloat(fields.amount);
+    if (!fields.amount || isNaN(amt) || amt <= 0) e.amount = "Enter a valid amount";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
-  const onSubmit = async (data: FormData) => {
+  const handleSubmit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (!validate()) return;
     setSubmitting(true);
     try {
       await createPayment({
-        recipientName: data.recipientName,
-        accountNumber: data.accountNumber.replace(/\s|-/g, ""),
-        paymentType: data.paymentType,
-        bankOrProvider: data.bankOrProvider,
-        amount: data.amount,
-        note: data.note,
+        recipientName: fields.recipientName.trim(),
+        accountNumber: fields.accountNumber.replace(/\s|-/g, ""),
+        paymentType: fields.paymentType,
+        bankOrProvider: fields.bankOrProvider,
+        amount: parseFloat(fields.amount),
+        note: fields.note || undefined,
       });
-      toast.success(`Payment to ${data.recipientName} submitted — processing now`);
-      reset();
+      toast.success(`Payment to ${fields.recipientName.trim()} submitted — processing now`);
+      setFields(EMPTY);
+      setErrors({});
       onOpenChange(false);
       onSuccess();
     } catch (err) {
@@ -124,11 +132,13 @@ export function CreatePaymentDialog({
     }
   };
 
-  const handleTypeChange = (type: "bank" | "momo" | "card") => {
-    setValue("paymentType", type);
-    setValue("bankOrProvider", "");
-    setValue("accountNumber", "");
+  const handleTypeChange = (type: PayType) => {
+    setFields((f) => ({ ...f, paymentType: type, bankOrProvider: "", accountNumber: "" }));
+    setErrors({});
   };
+
+  const config = TYPE_CONFIG[fields.paymentType];
+  const Icon = config.icon;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,14 +147,14 @@ export function CreatePaymentDialog({
           <DialogTitle>Create Payment</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Payment type selector */}
           <div className="space-y-2">
             <Label>Payment Type</Label>
             <div className="grid grid-cols-3 gap-2">
-              {(["bank", "momo", "card"] as const).map((type) => {
+              {(["bank", "momo", "card"] as PayType[]).map((type) => {
                 const Ic = TYPE_CONFIG[type].icon;
-                const active = paymentType === type;
+                const active = fields.paymentType === type;
                 return (
                   <button
                     key={type}
@@ -166,80 +176,77 @@ export function CreatePaymentDialog({
 
           {/* Recipient */}
           <div className="space-y-1.5">
-            <Label htmlFor="recipientName">Recipient Name</Label>
+            <Label htmlFor="cp-name">Recipient Name</Label>
             <Input
-              id="recipientName"
+              id="cp-name"
               placeholder="Full name or business name"
-              {...register("recipientName")}
+              value={fields.recipientName}
+              onChange={(e) => set("recipientName", e.target.value)}
             />
-            {errors.recipientName && (
-              <p className="text-xs text-danger">{errors.recipientName.message}</p>
-            )}
+            {errors.recipientName && <p className="text-xs text-danger">{errors.recipientName}</p>}
           </div>
 
           {/* Provider */}
           <div className="space-y-1.5">
-            <Label htmlFor="bankOrProvider">
-              {paymentType === "bank" ? "Bank" : paymentType === "momo" ? "Network" : "Card Network"}
+            <Label htmlFor="cp-provider">
+              {fields.paymentType === "bank" ? "Bank" : fields.paymentType === "momo" ? "Network" : "Card Network"}
             </Label>
             <select
-              id="bankOrProvider"
-              {...register("bankOrProvider")}
+              id="cp-provider"
+              value={fields.bankOrProvider}
+              onChange={(e) => set("bankOrProvider", e.target.value)}
               className="flex h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <option value="">Select {paymentType === "bank" ? "bank" : paymentType === "momo" ? "network" : "card network"}…</option>
+              <option value="">Select…</option>
               {config.providers.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
+                <option key={p} value={p}>{p}</option>
               ))}
             </select>
-            {errors.bankOrProvider && (
-              <p className="text-xs text-danger">{errors.bankOrProvider.message}</p>
-            )}
+            {errors.bankOrProvider && <p className="text-xs text-danger">{errors.bankOrProvider}</p>}
           </div>
 
-          {/* Account / card number */}
+          {/* Account number */}
           <div className="space-y-1.5">
-            <Label htmlFor="accountNumber">{config.accountLabel}</Label>
+            <Label htmlFor="cp-account">{config.accountLabel}</Label>
             <Input
-              id="accountNumber"
+              id="cp-account"
               placeholder={config.accountPlaceholder}
-              {...register("accountNumber")}
               inputMode="numeric"
+              value={fields.accountNumber}
+              onChange={(e) => set("accountNumber", e.target.value)}
             />
-            {errors.accountNumber && (
-              <p className="text-xs text-danger">{errors.accountNumber.message}</p>
-            )}
+            {errors.accountNumber && <p className="text-xs text-danger">{errors.accountNumber}</p>}
           </div>
 
           {/* Amount */}
           <div className="space-y-1.5">
-            <Label htmlFor="amount">Amount (GHS)</Label>
+            <Label htmlFor="cp-amount">Amount (GHS)</Label>
             <Input
-              id="amount"
+              id="cp-amount"
               type="number"
               min="0.01"
               step="0.01"
               placeholder="0.00"
-              {...register("amount")}
+              value={fields.amount}
+              onChange={(e) => set("amount", e.target.value)}
             />
-            {errors.amount && (
-              <p className="text-xs text-danger">{errors.amount.message}</p>
-            )}
+            {errors.amount && <p className="text-xs text-danger">{errors.amount}</p>}
           </div>
 
           {/* Note */}
           <div className="space-y-1.5">
-            <Label htmlFor="note">Note (optional)</Label>
-            <Input id="note" placeholder="e.g. Invoice #1234" {...register("note")} />
+            <Label htmlFor="cp-note">Note (optional)</Label>
+            <Input
+              id="cp-note"
+              placeholder="e.g. Invoice #1234"
+              value={fields.note}
+              onChange={(e) => set("note", e.target.value)}
+            />
           </div>
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
+              <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
             <Button type="submit" disabled={submitting}>
               {submitting ? "Sending…" : "Send Payment"}
