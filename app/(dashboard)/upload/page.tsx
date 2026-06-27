@@ -8,8 +8,16 @@ import { UploadZone } from "@/components/shared/UploadZone";
 import { PaymentsTable } from "@/features/payments/PaymentTable";
 import { Button } from "@/components/ui/button";
 import { createBatch } from "@/services/api/payments";
-import { sampleBatchPayments } from "@/services/mock/payments";
 import { formatCurrency } from "@/lib/utils";
+import type { Payment } from "@/types/payment";
+
+const SAMPLE_PREVIEW: Payment[] = [
+  { id: "prev_1", recipientName: "Kwame Asante", accountNumber: "0244123456", paymentType: "momo", bankOrProvider: "MTN MoMo", amount: 3500, currency: "GHS", status: "pending", validation: { valid: true }, createdAt: new Date().toISOString() },
+  { id: "prev_2", recipientName: "Ama Serwaa", accountNumber: "0555987654", paymentType: "momo", bankOrProvider: "Vodafone Cash", amount: 4200, currency: "GHS", status: "pending", validation: { valid: true }, createdAt: new Date().toISOString() },
+  { id: "prev_3", recipientName: "Invalid Account", accountNumber: "123", paymentType: "bank", bankOrProvider: "GCB Bank", amount: 5000, currency: "GHS", status: "pending", validation: { valid: false, errors: ["Account number must be 10–16 digits"] }, createdAt: new Date().toISOString() },
+  { id: "prev_4", recipientName: "Golden Harvest Ltd", accountNumber: "1234567890", paymentType: "bank", bankOrProvider: "Ecobank Ghana", amount: 85000, currency: "GHS", status: "pending", validation: { valid: true }, createdAt: new Date().toISOString() },
+  { id: "prev_5", recipientName: "Kofi Mensah", accountNumber: "0208765432", paymentType: "momo", bankOrProvider: "MTN MoMo", amount: 2800, currency: "GHS", status: "pending", validation: { valid: true }, createdAt: new Date().toISOString() },
+];
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Payment } from "@/types/payment";
@@ -18,7 +26,7 @@ export default function UploadBatchPage() {
   const { can } = useAuth();
   const [uploaded, setUploaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [previewPayments] = useState<Payment[]>(sampleBatchPayments);
+  const [previewPayments] = useState<Payment[]>(SAMPLE_PREVIEW);
 
   const totalAmount = previewPayments.reduce((sum, p) => sum + p.amount, 0);
   const bankCount = previewPayments.filter((p) => p.paymentType === "bank").length;
