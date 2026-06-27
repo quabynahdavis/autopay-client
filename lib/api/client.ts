@@ -1,8 +1,7 @@
-// In the browser the rewrite in next.config.ts transparently forwards /api/*
-// to the backend, so no cross-origin request (and no CORS) is ever made.
-// NEXT_PUBLIC_API_URL can still override this for special environments.
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "/api";
+// All API requests go through the Next.js proxy rewrite defined in next.config.ts.
+// This means the browser always calls its own origin (/api/...) and Next.js
+// forwards it server-side to the backend — no CORS, no direct backend URL in the bundle.
+export const API_BASE_URL = "/api";
 
 
 export const TOKEN_KEY = "bulkpay_auth_token";
