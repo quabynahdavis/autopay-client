@@ -21,15 +21,15 @@ export const paymentColumns: ColumnDef<Payment>[] = [
   {
     accessorKey: "paymentType",
     header: "Payment Type",
-    cell: ({ row }) => (
-      <Badge variant="outline">
-        {row.original.paymentType === "bank" ? "Bank" : "MoMo"}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const type = row.original.paymentType;
+      const labels: Record<string, string> = { bank: "Bank", momo: "MoMo", card: "Card" };
+      return <Badge variant="outline">{labels[type] ?? type}</Badge>;
+    },
   },
   {
     accessorKey: "bankOrProvider",
-    header: "Bank / MoMo",
+    header: "Bank / Provider",
   },
   {
     accessorKey: "amount",

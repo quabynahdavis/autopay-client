@@ -5,7 +5,7 @@ export type PaymentStatus =
   | "processing"
   | "retry";
 
-export type PaymentType = "bank" | "momo";
+export type PaymentType = "bank" | "momo" | "card";
 
 export type BatchStatus =
   | "draft"

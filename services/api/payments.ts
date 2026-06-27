@@ -115,3 +115,19 @@ export function approveRequest(id: string) {
 export function rejectRequest(id: string) {
   return apiFetch<ApprovalRequest>(`/approvals/${id}/reject`, { method: "POST" });
 }
+
+export interface CreatePaymentInput {
+  recipientName: string;
+  accountNumber: string;
+  paymentType: "bank" | "momo" | "card";
+  bankOrProvider: string;
+  amount: number;
+  note?: string;
+}
+
+export function createPayment(input: CreatePaymentInput) {
+  return apiFetch<{ id: string; status: string }>("/payments", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
