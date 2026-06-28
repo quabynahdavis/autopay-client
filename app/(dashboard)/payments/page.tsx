@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { PageHeader, SectionCard } from "@/components/shared/PageHeader";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { PaymentsTable } from "@/features/payments/PaymentTable";
-import { CreatePaymentDialog } from "@/features/payments/CreatePaymentDialog";
+import { CreateBatchDialog } from "@/features/payments/CreateBatchDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchPayments } from "@/services/api/payments";
@@ -32,7 +32,7 @@ export default function PaymentsPage() {
         actions={
           <Button id="create-payment-btn" onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4" />
-            Create Payment
+            Create Payment Batch
           </Button>
         }
       />
@@ -50,7 +50,7 @@ export default function PaymentsPage() {
         )}
       </SectionCard>
 
-      <CreatePaymentDialog
+      <CreateBatchDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSuccess={handleSuccess}
