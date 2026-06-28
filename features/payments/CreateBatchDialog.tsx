@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Search, ArrowDownUp } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,8 @@ interface CreateBatchDialogProps {
   onSuccess: () => void;
 }
 
+type SortOption = "name" | "department";
+
 export function CreateBatchDialog({
   open,
   onOpenChange,
@@ -33,14 +35,18 @@ export function CreateBatchDialog({
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [bankingData, setBankingData] = useState<Record<string, BankingInfo>>({});
   
+  // Filtering and Sorting
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("name");
+
   // Selection and amounts
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [bulkAmount, setBulkAmount] = useState("");
   
   const [batchName, setBatchName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch employees when dialog opens
   useEffect(() => {
     if (open) {
       setLoadingEmployees(true);
@@ -49,7 +55,6 @@ export function CreateBatchDialog({
           const emps = data || [];
           setEmployees(emps);
           
-          // Pre-fetch banking info for all employees
           const bankingPromises = emps.map(emp => 
             fetchBankingInfo(emp.employeeId)
               .then(info => ({ id: emp.employeeId, info }))
@@ -71,12 +76,71 @@ export function CreateBatchDialog({
           setLoadingEmployees(false);
         });
     } else {
-      // Reset state on close
       setSelectedIds(new Set());
       setAmounts({});
       setBatchName("");
+      setSearchQuery("");
+      setBulkAmount("");
     }
   }, [open]);
+
+  // Derived filtered & sorted employees
+  const processedEmployees = useMemo(() => {
+    let result = [...employees];
+    
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(emp => 
+        emp.name.toLowerCase().includes(q) || 
+        emp.department.toLowerCase().includes(q)
+      );
+    }
+    
+    result.sort((a, b) => {
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return a.department.localeCompare(b.department);
+      }
+    });
+    
+    return result;
+  }, [employees, searchQuery, sortBy]);
+
+  // Bulk actions
+  const validEmployeesToSelect = useMemo(() => {
+    return processedEmployees.filter(emp => !!bankingData[emp.employeeId]);
+  }, [processedEmployees, bankingData]);
+
+  const isAllSelected = validEmployeesToSelect.length > 0 && 
+    validEmployeesToSelect.every(emp => selectedIds.has(emp.employeeId));
+
+  const toggleSelectAll = () => {
+    const next = new Set(selectedIds);
+    if (isAllSelected) {
+      validEmployeesToSelect.forEach(emp => next.delete(emp.employeeId));
+    } else {
+      validEmployeesToSelect.forEach(emp => next.add(emp.employeeId));
+    }
+    setSelectedIds(next);
+  };
+
+  const applyBulkAmount = () => {
+    if (!bulkAmount || isNaN(parseFloat(bulkAmount))) {
+      toast.error("Please enter a valid bulk amount");
+      return;
+    }
+    if (selectedIds.size === 0) {
+      toast.error("Please select at least one employee first");
+      return;
+    }
+    const newAmounts = { ...amounts };
+    selectedIds.forEach(id => {
+      newAmounts[id] = bulkAmount;
+    });
+    setAmounts(newAmounts);
+    toast.success(`Applied GHS ${bulkAmount} to ${selectedIds.size} employees`);
+  };
 
   const toggleEmployee = (id: string) => {
     const next = new Set(selectedIds);
@@ -169,37 +233,93 @@ export function CreateBatchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create Payment Batch</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden space-y-4">
-          <div className="space-y-1.5 shrink-0 pt-4">
-            <Label htmlFor="batch-name">Batch Name</Label>
-            <Input
-              id="batch-name"
-              placeholder="e.g. June 2026 Payroll"
-              value={batchName}
-              onChange={(e) => setBatchName(e.target.value)}
-            />
+          <div className="grid grid-cols-2 gap-4 shrink-0 pt-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="batch-name">Batch Name</Label>
+              <Input
+                id="batch-name"
+                placeholder="e.g. June 2026 Payroll"
+                value={batchName}
+                onChange={(e) => setBatchName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Bulk Amount (GHS)</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={bulkAmount}
+                  onChange={(e) => setBulkAmount(e.target.value)}
+                  min="0.01"
+                  step="0.01"
+                />
+                <Button type="button" variant="secondary" onClick={applyBulkAmount}>
+                  Apply to Selected
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 shrink-0 bg-muted/30 p-2 rounded-lg border border-border">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or department..."
+                className="pl-9 h-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
+              <select
+                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+              >
+                <option value="name">Sort by Name</option>
+                <option value="department">Sort by Dept</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2 pb-2 space-y-3">
-            <Label>Select Employees</Label>
+            <div className="flex items-center justify-between">
+              <Label>Select Employees</Label>
+              <div className="flex items-center gap-2 text-sm">
+                <input 
+                  type="checkbox"
+                  id="select-all"
+                  className="w-4 h-4 rounded border-input text-primary focus:ring-primary"
+                  checked={isAllSelected && validEmployeesToSelect.length > 0}
+                  onChange={toggleSelectAll}
+                  disabled={validEmployeesToSelect.length === 0}
+                />
+                <Label htmlFor="select-all" className="font-normal cursor-pointer text-muted-foreground">
+                  Select All Valid
+                </Label>
+              </div>
+            </div>
             
             {loadingEmployees ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 justify-center">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 Loading employee directory...
               </div>
-            ) : employees.length === 0 ? (
+            ) : processedEmployees.length === 0 ? (
               <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-xl">
-                No active employees found.
+                No active employees match your search.
               </div>
             ) : (
               <div className="border border-border rounded-xl divide-y divide-border">
-                {employees.map(emp => {
+                {processedEmployees.map(emp => {
                   const isSelected = selectedIds.has(emp.employeeId);
                   const banking = bankingData[emp.employeeId];
                   const hasBanking = !!banking;
@@ -208,7 +328,7 @@ export function CreateBatchDialog({
                     <div key={emp.employeeId} className={`p-3 flex items-center gap-4 transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-muted/50'}`}>
                       <input 
                         type="checkbox" 
-                        className="w-4 h-4 shrink-0 rounded border-input text-primary focus:ring-primary"
+                        className="w-4 h-4 shrink-0 rounded border-input text-primary focus:ring-primary disabled:opacity-50"
                         checked={isSelected}
                         onChange={() => toggleEmployee(emp.employeeId)}
                         disabled={!hasBanking}
@@ -241,7 +361,7 @@ export function CreateBatchDialog({
                         <Input 
                           type="number"
                           placeholder="Amount (GHS)"
-                          className="h-8 text-sm"
+                          className={`h-8 text-sm ${isSelected && !amounts[emp.employeeId] ? 'border-danger' : ''}`}
                           value={amounts[emp.employeeId] || ""}
                           onChange={(e) => handleAmountChange(emp.employeeId, e.target.value)}
                           disabled={!isSelected}
