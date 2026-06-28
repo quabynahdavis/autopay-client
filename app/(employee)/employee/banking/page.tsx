@@ -26,6 +26,8 @@ export default function EmployeeBankingPage() {
   const [momoNumber, setMomoNumber] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardNetwork, setCardNetwork] = useState("");
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -35,6 +37,8 @@ export default function EmployeeBankingPage() {
       setMomoNumber(banking.momoNumber || "");
       setBankName(banking.bankName || "");
       setBankAccountNumber(banking.bankAccountNumber || "");
+      setCardNumber(banking.cardNumber || "");
+      setCardNetwork(banking.cardNetwork || "");
     }
   }, [banking]);
 
@@ -44,10 +48,13 @@ export default function EmployeeBankingPage() {
         preferredMethod: method,
         momoNetwork: (method === "momo" ? momoNetwork : undefined) as any,
         momoNumber: method === "momo" ? momoNumber : undefined,
+        momoRegisteredName: method === "momo" ? user?.name : undefined,
         bankName: method === "bank" ? bankName : undefined,
         bankAccountNumber: method === "bank" ? bankAccountNumber : undefined,
-        accountName: user?.name || undefined,
-        momoRegisteredName: method === "momo" ? user?.name : undefined,
+        accountName: method === "bank" ? user?.name : undefined,
+        cardNumber: method === "card" ? cardNumber : undefined,
+        cardNetwork: method === "card" ? cardNetwork : undefined,
+        cardName: method === "card" ? user?.name : undefined,
       };
 
       await updateBankingInfo(employeeId, payload);
@@ -67,6 +74,9 @@ export default function EmployeeBankingPage() {
         <Skeleton className="h-64 w-full rounded-xl" />
       ) : (
         <>
+          <div className="mb-4 rounded-xl bg-violet-500/10 p-4 border border-violet-500/20 text-sm text-violet-700 dark:text-violet-300">
+            <strong>Important:</strong> You can only select ONE active payment method for your salary and reimbursements. Ensure the details are correct.
+          </div>
           <SectionCard title="Payment method">
             <div className="flex gap-3">
               <Button
@@ -83,10 +93,17 @@ export default function EmployeeBankingPage() {
               >
                 Bank
               </Button>
+              <Button
+                variant={method === "card" ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => setMethod("card")}
+              >
+                Card
+              </Button>
             </div>
           </SectionCard>
-          <SectionCard title={method === "momo" ? "MoMo details" : "Bank details"}>
-            {method === "momo" ? (
+          <SectionCard title={method === "momo" ? "MoMo details" : method === "bank" ? "Bank details" : "Card details"}>
+            {method === "momo" && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="momoNetwork">Network</Label>
@@ -112,7 +129,9 @@ export default function EmployeeBankingPage() {
                   />
                 </div>
               </div>
-            ) : (
+            )}
+            
+            {method === "bank" && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="bankName">Bank</Label>
@@ -134,6 +153,33 @@ export default function EmployeeBankingPage() {
                 </div>
               </div>
             )}
+
+            {method === "card" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cardNetwork">Card Provider</Label>
+                  <select
+                    id="cardNetwork"
+                    value={cardNetwork}
+                    onChange={(e) => setCardNetwork(e.target.value)}
+                    className="flex h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select provider…</option>
+                    <option value="Visa">Visa</option>
+                    <option value="Mastercard">Mastercard</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cardNumber">Card number</Label>
+                  <Input
+                    id="cardNumber"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    placeholder="16-digit card number"
+                  />
+                </div>
+              </div>
+            )}
           </SectionCard>
           <Button className="w-full" onClick={() => setOpen(true)}>
             Save
@@ -142,7 +188,7 @@ export default function EmployeeBankingPage() {
             open={open}
             onOpenChange={setOpen}
             title="Save Details?"
-            description="Are you sure you want to update your banking info?"
+            description={`Are you sure you want to set your payment method to ${method.toUpperCase()}? This will be used for all incoming payments.`}
             confirmLabel="Save"
             onConfirm={handleSave}
           />

@@ -13,7 +13,7 @@ export type EmploymentStatus =
 
 export type EmploymentType = "full_time" | "part_time" | "contract" | "intern";
 export type PayrollFrequency = "monthly" | "bi_weekly" | "weekly";
-export type PaymentMethodType = "bank" | "momo";
+export type PaymentMethodType = "bank" | "momo" | "card";
 export type MomoNetwork = "MTN" | "Telecel" | "AirtelTigo";
 export type LeaveType =
   | "annual"
@@ -70,6 +70,9 @@ export interface BankingInfo {
   momoNetwork?: MomoNetwork;
   momoNumber?: string;
   momoRegisteredName?: string;
+  cardNumber?: string;
+  cardNetwork?: string;
+  cardName?: string;
   pendingVerification?: boolean;
 }
 
@@ -119,6 +122,7 @@ export interface EmployeeNotification {
   type:
     | "salary_paid"
     | "payment_failed"
+    | "payment"
     | "leave_approved"
     | "leave_rejected"
     | "profile_updated"
