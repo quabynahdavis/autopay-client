@@ -14,15 +14,7 @@ export const mockUsers: (AuthUser & { password: string })[] = [
     companyId: defaultCompany.id,
     companyName: defaultCompany.name,
   },
-  {
-    id: "usr_3",
-    email: "sarah.osei@acmecorp.com.gh",
-    password: DEMO_PASSWORD,
-    name: "Sarah Osei",
-    role: "finance_officer",
-    companyId: defaultCompany.id,
-    companyName: defaultCompany.name,
-  },
+
   {
     id: "usr_6",
     email: "kwame.asante@acmecorp.com.gh",

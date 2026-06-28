@@ -13,9 +13,7 @@ describe("getPostLoginRedirect", () => {
     expect(getPostLoginRedirect("company_admin")).toBe("/");
   });
 
-  it("sends finance_officer to /", () => {
-    expect(getPostLoginRedirect("finance_officer")).toBe("/");
-  });
+
 });
 
 describe("isAdminRole", () => {
@@ -23,9 +21,7 @@ describe("isAdminRole", () => {
     expect(isAdminRole("company_admin")).toBe(true);
   });
 
-  it("returns true for finance_officer", () => {
-    expect(isAdminRole("finance_officer")).toBe(true);
-  });
+
 
   it("returns false for employee", () => {
     expect(isAdminRole("employee")).toBe(false);
@@ -41,9 +37,7 @@ describe("isEmployeeRole", () => {
     expect(isEmployeeRole("company_admin")).toBe(false);
   });
 
-  it("returns false for finance_officer", () => {
-    expect(isEmployeeRole("finance_officer")).toBe(false);
-  });
+
 });
 
 describe("getRoleLabel", () => {
@@ -52,9 +46,7 @@ describe("getRoleLabel", () => {
     expect(typeof getRoleLabel("company_admin")).toBe("string");
   });
 
-  it("returns human-readable label for finance_officer", () => {
-    expect(getRoleLabel("finance_officer")).toBeTruthy();
-  });
+
 
   it("returns human-readable label for employee", () => {
     expect(getRoleLabel("employee")).toBeTruthy();
@@ -90,31 +82,7 @@ describe("hasPermission — company_admin", () => {
   });
 });
 
-describe("hasPermission — finance_officer", () => {
-  it("can access dashboard", () => {
-    expect(hasPermission("finance_officer", "admin.dashboard")).toBe(true);
-  });
 
-  it("can approve payments", () => {
-    expect(hasPermission("finance_officer", "admin.approval")).toBe(true);
-  });
-
-  it("can upload payment batches", () => {
-    expect(hasPermission("finance_officer", "admin.upload")).toBe(true);
-  });
-
-  it("cannot manage employees", () => {
-    expect(hasPermission("finance_officer", "admin.employees")).toBe(false);
-  });
-
-  it("cannot access settings", () => {
-    expect(hasPermission("finance_officer", "admin.settings")).toBe(false);
-  });
-
-  it("cannot access employee portal", () => {
-    expect(hasPermission("finance_officer", "employee.payments")).toBe(false);
-  });
-});
 
 describe("hasPermission — employee", () => {
   it("can access employee dashboard", () => {

@@ -1,4 +1,4 @@
-export type UserRole = "company_admin" | "finance_officer" | "employee";
+export type UserRole = "company_admin" | "employee";
 
 export type Permission =
   | "admin.dashboard"
@@ -28,7 +28,7 @@ export interface LoginCredentials {
   password: string;
 }
 
-export const ADMIN_ROLES: UserRole[] = ["company_admin", "finance_officer"];
+export const ADMIN_ROLES: UserRole[] = ["company_admin"];
 
 export const EMPLOYEE_ROLES: UserRole[] = ["employee"];
 
@@ -43,7 +43,6 @@ export function isEmployeeRole(role: UserRole): boolean {
 export function getRoleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
     company_admin: "Company Admin",
-    finance_officer: "Finance Officer",
     employee: "Employee",
   };
   return labels[role];

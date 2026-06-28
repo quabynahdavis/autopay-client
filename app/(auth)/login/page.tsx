@@ -75,11 +75,7 @@ export default function LoginPage() {
               Admin — admin@acme.com.gh
             </button>
           </li>
-          <li>
-            <button type="button" onClick={() => fillDemo("finance@acme.com.gh")} className="text-primary hover:underline text-left">
-              Finance — finance@acme.com.gh
-            </button>
-          </li>
+
           <li>
             <button type="button" onClick={() => fillDemo("kwame@acme.com.gh")} className="text-primary hover:underline text-left">
               Employee — kwame@acme.com.gh

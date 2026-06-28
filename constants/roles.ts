@@ -10,12 +10,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "admin.settings",
     "admin.employees",
   ],
-  finance_officer: [
-    "admin.dashboard",
-    "admin.payments",
-    "admin.upload",
-    "admin.reports",
-  ],
   employee: [
     "employee.dashboard",
     "employee.profile",

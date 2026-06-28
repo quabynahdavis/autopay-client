@@ -15,8 +15,7 @@ import { getRoleLabel, type UserRole } from "@/types/auth";
 import { formatDate } from "@/lib/utils";
 
 const roleDescriptions: Partial<Record<UserRole, string>> = {
-  company_admin: "Full access except payment approvals (handled by Finance)",
-  finance_officer: "Upload batches, process payments, approve payouts, and view reports",
+  company_admin: "Full access to dashboard, batch processing, approvals, and team management",
   employee: "Self-service portal for payments and banking only",
 };
 

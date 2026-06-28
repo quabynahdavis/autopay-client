@@ -9,14 +9,7 @@ export const teamMembers: TeamMember[] = [
     status: "active",
     lastActive: "2026-06-27T09:15:00Z",
   },
-  {
-    id: "tm_2",
-    name: "Sarah Osei",
-    email: "sarah.osei@acmecorp.com.gh",
-    role: "finance_officer",
-    status: "active",
-    lastActive: "2026-06-27T07:30:00Z",
-  },
+
   {
     id: "tm_3",
     name: "Ama Osei",
