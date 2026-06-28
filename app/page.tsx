@@ -24,14 +24,7 @@ export default function LandingPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!isLoading && user) {
-      router.replace(user.role === "employee" ? "/employee" : "/dashboard");
-    }
-  }, [user, isLoading, router]);
-
   if (isLoading) return null;
-  if (user) return null;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -84,18 +77,29 @@ export default function LandingPage() {
           <span className="text-lg font-bold tracking-tight">MassPay</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="rounded-xl px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/40 hover:brightness-110"
-          >
-            Get started free
-          </Link>
+          {!user ? (
+            <>
+              <Link
+                href="/login"
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/40 hover:brightness-110"
+              >
+                Get started free
+              </Link>
+            </>
+          ) : (
+            <Link
+              href={user.role === "employee" ? "/employee" : "/dashboard"}
+              className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/40 hover:brightness-110"
+            >
+              Go to Dashboard
+            </Link>
+          )}
         </div>
       </motion.nav>
 
@@ -127,24 +131,41 @@ export default function LandingPage() {
           </motion.p>
 
           <motion.div variants={itemVariants} className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/register"
-              className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-2xl shadow-violet-500/30 transition-all hover:shadow-violet-500/50 hover:brightness-110"
-            >
-              Start for free
-              <motion.div
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+            {!user ? (
+              <>
+                <Link
+                  href="/register"
+                  className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-2xl shadow-violet-500/30 transition-all hover:shadow-violet-500/50 hover:brightness-110"
+                >
+                  Start for free
+                  <motion.div
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </motion.div>
+                </Link>
+                <Link
+                  href="/login"
+                  className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-base font-medium text-white/80 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                >
+                  Sign in to dashboard
+                </Link>
+              </>
+            ) : (
+              <Link
+                href={user.role === "employee" ? "/employee" : "/dashboard"}
+                className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-2xl shadow-violet-500/30 transition-all hover:shadow-violet-500/50 hover:brightness-110"
               >
-                <ArrowRight className="h-4 w-4" />
-              </motion.div>
-            </Link>
-            <Link
-              href="/login"
-              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-base font-medium text-white/80 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
-            >
-              Sign in to dashboard
-            </Link>
+                Go to Dashboard
+                <motion.div
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </motion.div>
+              </Link>
+            )}
           </motion.div>
 
           {/* Stats row */}
@@ -415,23 +436,37 @@ export default function LandingPage() {
             payroll, vendor payments, and everything in between.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                href="/register"
-                className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-4 text-base font-semibold shadow-2xl shadow-violet-500/30 transition-all hover:brightness-110"
-              >
-                Create free account
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                href="/login"
-                className="rounded-2xl border border-white/15 bg-white/5 px-8 py-4 text-base font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white inline-block"
-              >
-                Already have an account?
-              </Link>
-            </motion.div>
+            {!user ? (
+              <>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    href="/register"
+                    className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-4 text-base font-semibold shadow-2xl shadow-violet-500/30 transition-all hover:brightness-110"
+                  >
+                    Create free account
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    href="/login"
+                    className="rounded-2xl border border-white/15 bg-white/5 px-8 py-4 text-base font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white inline-block"
+                  >
+                    Already have an account?
+                  </Link>
+                </motion.div>
+              </>
+            ) : (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link
+                  href={user.role === "employee" ? "/employee" : "/dashboard"}
+                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-4 text-base font-semibold shadow-2xl shadow-violet-500/30 transition-all hover:brightness-110"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </motion.div>
+            )}
           </div>
         </motion.div>
       </section>
@@ -447,8 +482,16 @@ export default function LandingPage() {
             <span>© {new Date().getFullYear()}</span>
           </div>
           <div className="flex gap-6">
-            <Link href="/login" className="transition-colors hover:text-white/70">Sign in</Link>
-            <Link href="/register" className="transition-colors hover:text-white/70">Register</Link>
+            {!user ? (
+              <>
+                <Link href="/login" className="transition-colors hover:text-white/70">Sign in</Link>
+                <Link href="/register" className="transition-colors hover:text-white/70">Register</Link>
+              </>
+            ) : (
+              <Link href={user.role === "employee" ? "/employee" : "/dashboard"} className="transition-colors hover:text-white/70">
+                Dashboard
+              </Link>
+            )}
           </div>
         </div>
       </footer>
